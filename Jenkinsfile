@@ -10,7 +10,7 @@ pipeline {
     stage ('Archive') {
       steps{
         echo "Archiving Project"
-        archiveArtifacts artifacts: '**/*.war', followSymlinks: false
+        archiveArtifacts artifacts: '**/*.jar', followSymlinks: false
       }
     }
    stage('Build images') {
