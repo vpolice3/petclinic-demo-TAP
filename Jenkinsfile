@@ -1,4 +1,9 @@
 pipeline {
+  environment {
+    registry = "vikaspolicedockerhub/petclinic"
+    registryCredential = 'DOCKER_HUB_CREDENTIALS'
+    dockerImage = ''
+  }
   agent any
   stages{
     stage ('Build') {
@@ -13,26 +18,30 @@ pipeline {
         archiveArtifacts artifacts: '**/*.jar', followSymlinks: false
       }
     }
-   stage('Build images') {
-	      steps {
-		sh '''
-			  docker build -f "Dockerfile" -t vikaspolicedockerhub/shopizer-app:latest . 
-		'''
+   stage ('Build Docker Image') {
+      steps{
+        echo "Building Docker Image"
+        script {
+          dockerImage = docker.build registry + ":$BUILD_NUMBER"
+        }
       }
     }
-   stage('Push Image'){
-	       steps{
-	         withDockerRegistry([credentialsId: 'DOCKER_HUB_CREDENTIALS', url: '']) {
-   			sh 'docker push vikaspolicedockerhub/shopizer-app:latest'
-	}
+    stage ('Push Docker Image') {
+      steps{
+        echo "Pushing Docker Image"
+        script {
+          docker.withRegistry( '', registryCredential ) {
+              dockerImage.push()
+              dockerImage.push('latest')
+          }
+        }
       }
     }
-   stage('Deploy to dev env') {
-	      steps {
-		sh '''
-			  docker rm -f shopizer-app || true
-			 docker run -d --name=shopizer-app -p 8081:8080 vikaspolicedockerhub/shopizer-app:latest  
-		'''
+    stage ('Deploy to Dev') {
+      steps{
+        echo "Deploying to Dev Environment"
+        sh "docker rm -f petclinic || true"
+        sh "docker run -d --name=petclinic -p 8081:8080 vikaspolicedockerhub/petclinic"
       }
     }
   }
