@@ -16,7 +16,6 @@ pipeline {
    stage('Build images') {
 	      steps {
 		sh '''
-			  cd sm-shop
 			  docker build -f "Dockerfile" -t vikaspolicedockerhub/shopizer-app:latest . 
 		'''
       }
